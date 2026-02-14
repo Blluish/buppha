@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, initializeDb } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 
 export async function GET() {
@@ -9,25 +9,26 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const db = getDb();
+    await initializeDb();
+    const sql = getDb();
 
-    const totalProducts = (db.prepare("SELECT COUNT(*) as count FROM products WHERE is_active = 1").get() as any).count;
-    const totalOrders = (db.prepare("SELECT COUNT(*) as count FROM orders").get() as any).count;
-    const totalRevenue = (db.prepare("SELECT COALESCE(SUM(total), 0) as total FROM orders WHERE payment_status = 'paid'").get() as any).total;
-    const pendingOrders = (db.prepare("SELECT COUNT(*) as count FROM orders WHERE status = 'pending'").get() as any).count;
-    const totalCustomers = (db.prepare("SELECT COUNT(*) as count FROM users WHERE role = 'customer'").get() as any).count;
-    const lowStock = (db.prepare("SELECT COUNT(*) as count FROM products WHERE stock < 10 AND is_active = 1").get() as any).count;
+    const [prodCount] = await sql`SELECT COUNT(*) as count FROM products WHERE is_active = 1`;
+    const [orderCount] = await sql`SELECT COUNT(*) as count FROM orders`;
+    const [revenueRow] = await sql`SELECT COALESCE(SUM(total), 0) as total FROM orders WHERE payment_status = 'paid'`;
+    const [pendingCount] = await sql`SELECT COUNT(*) as count FROM orders WHERE status = 'pending'`;
+    const [customerCount] = await sql`SELECT COUNT(*) as count FROM users WHERE role = 'customer'`;
+    const [lowStockCount] = await sql`SELECT COUNT(*) as count FROM products WHERE stock < 10 AND is_active = 1`;
 
-    const recentOrders = db.prepare("SELECT * FROM orders ORDER BY created_at DESC LIMIT 5").all();
+    const recentOrders = await sql`SELECT * FROM orders ORDER BY created_at DESC LIMIT 5`;
 
     return NextResponse.json({
       stats: {
-        totalProducts,
-        totalOrders,
-        totalRevenue,
-        pendingOrders,
-        totalCustomers,
-        lowStock,
+        totalProducts: Number(prodCount.count),
+        totalOrders: Number(orderCount.count),
+        totalRevenue: Number(revenueRow.total),
+        pendingOrders: Number(pendingCount.count),
+        totalCustomers: Number(customerCount.count),
+        lowStock: Number(lowStockCount.count),
       },
       recentOrders,
     });

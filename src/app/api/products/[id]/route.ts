@@ -1,20 +1,21 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, initializeDb } from "@/lib/db";
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    await initializeDb();
+    const sql = getDb();
     const { id } = await params;
-    const db = getDb();
-    const product = db.prepare("SELECT * FROM products WHERE id = ? AND is_active = 1").get(id);
+    const rows = await sql`SELECT * FROM products WHERE id = ${id} AND is_active = 1`;
 
-    if (!product) {
+    if (rows.length === 0) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    return NextResponse.json({ product });
+    return NextResponse.json({ product: rows[0] });
   } catch (error) {
     console.error("Product GET error:", error);
     return NextResponse.json({ error: "Failed to fetch product" }, { status: 500 });

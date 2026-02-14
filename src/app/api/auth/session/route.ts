@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getSession } from "@/lib/auth";
-import { getDb } from "@/lib/db";
+import { getDb, initializeDb } from "@/lib/db";
 
 export async function GET() {
   try {
@@ -9,10 +9,11 @@ export async function GET() {
       return NextResponse.json({ user: null });
     }
 
-    const db = getDb();
-    const user = db.prepare("SELECT id, email, name, role, phone, address FROM users WHERE id = ?").get(session.userId) as any;
+    await initializeDb();
+    const sql = getDb();
+    const rows = await sql`SELECT id, email, name, role, phone, address FROM users WHERE id = ${session.userId}`;
 
-    return NextResponse.json({ user: user || null });
+    return NextResponse.json({ user: rows[0] || null });
   } catch {
     return NextResponse.json({ user: null });
   }

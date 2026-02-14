@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import { getDb, initializeDb } from "@/lib/db";
 import { getSession } from "@/lib/auth";
 import { v4 as uuidv4 } from "uuid";
 
@@ -16,8 +16,9 @@ export async function GET() {
     const admin = await requireAdmin();
     if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const db = getDb();
-    const products = db.prepare("SELECT * FROM products ORDER BY created_at DESC").all();
+    await initializeDb();
+    const sql = getDb();
+    const products = await sql`SELECT * FROM products ORDER BY created_at DESC`;
     return NextResponse.json({ products });
   } catch (error) {
     console.error("Admin products GET error:", error);
@@ -30,29 +31,13 @@ export async function POST(request: NextRequest) {
     const admin = await requireAdmin();
     if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    await initializeDb();
+    const sql = getDb();
     const body = await request.json();
-    const db = getDb();
     const id = uuidv4();
 
-    db.prepare(`
-      INSERT INTO products (id, name, name_th, description, description_th, price, compare_price, category, image_url, stock, is_active, is_featured, material, weight)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      id,
-      body.name,
-      body.name_th || "",
-      body.description || "",
-      body.description_th || "",
-      body.price,
-      body.compare_price || 0,
-      body.category,
-      body.image_url || "",
-      body.stock || 0,
-      body.is_active ?? 1,
-      body.is_featured ?? 0,
-      body.material || "",
-      body.weight || ""
-    );
+    await sql`INSERT INTO products (id, name, name_th, description, description_th, price, compare_price, category, image_url, stock, is_active, is_featured, material, weight)
+      VALUES (${id}, ${body.name}, ${body.name_th || ""}, ${body.description || ""}, ${body.description_th || ""}, ${body.price}, ${body.compare_price || 0}, ${body.category}, ${body.image_url || ""}, ${body.stock || 0}, ${body.is_active ?? 1}, ${body.is_featured ?? 0}, ${body.material || ""}, ${body.weight || ""})`;
 
     return NextResponse.json({ id, success: true });
   } catch (error) {
@@ -66,28 +51,11 @@ export async function PUT(request: NextRequest) {
     const admin = await requireAdmin();
     if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    await initializeDb();
+    const sql = getDb();
     const body = await request.json();
-    const db = getDb();
 
-    db.prepare(`
-      UPDATE products SET name=?, name_th=?, description=?, description_th=?, price=?, compare_price=?, category=?, image_url=?, stock=?, is_active=?, is_featured=?, material=?, weight=?, updated_at=CURRENT_TIMESTAMP
-      WHERE id=?
-    `).run(
-      body.name,
-      body.name_th || "",
-      body.description || "",
-      body.description_th || "",
-      body.price,
-      body.compare_price || 0,
-      body.category,
-      body.image_url || "",
-      body.stock || 0,
-      body.is_active ?? 1,
-      body.is_featured ?? 0,
-      body.material || "",
-      body.weight || "",
-      body.id
-    );
+    await sql`UPDATE products SET name=${body.name}, name_th=${body.name_th || ""}, description=${body.description || ""}, description_th=${body.description_th || ""}, price=${body.price}, compare_price=${body.compare_price || 0}, category=${body.category}, image_url=${body.image_url || ""}, stock=${body.stock || 0}, is_active=${body.is_active ?? 1}, is_featured=${body.is_featured ?? 0}, material=${body.material || ""}, weight=${body.weight || ""}, updated_at=CURRENT_TIMESTAMP WHERE id=${body.id}`;
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -101,11 +69,12 @@ export async function DELETE(request: NextRequest) {
     const admin = await requireAdmin();
     if (!admin) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
+    await initializeDb();
+    const sql = getDb();
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    const db = getDb();
 
-    db.prepare("DELETE FROM products WHERE id = ?").run(id);
+    await sql`DELETE FROM products WHERE id = ${id}`;
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("Admin products DELETE error:", error);
