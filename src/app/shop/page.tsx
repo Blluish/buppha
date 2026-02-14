@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search } from "lucide-react";
 import Navbar from "@/components/Navbar";
@@ -8,7 +8,7 @@ import Footer from "@/components/Footer";
 import ProductCard from "@/components/ProductCard";
 import { Product, CATEGORIES } from "@/lib/types";
 
-export default function ShopPage() {
+function ShopContent() {
   const searchParams = useSearchParams();
   const categoryParam = searchParams.get("category") || "all";
 
@@ -42,9 +42,7 @@ export default function ShopPage() {
   }, [fetchProducts]);
 
   return (
-    <div className="min-h-screen">
-      <Navbar />
-
+    <>
       <div className="pt-24 pb-20 px-4">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -122,7 +120,17 @@ export default function ShopPage() {
           )}
         </div>
       </div>
+    </>
+  );
+}
 
+export default function ShopPage() {
+  return (
+    <div className="min-h-screen">
+      <Navbar />
+      <Suspense fallback={<div className="pt-24 pb-20 px-4 text-center text-[#9B8B7E]">กำลังโหลด...</div>}>
+        <ShopContent />
+      </Suspense>
       <Footer />
     </div>
   );
