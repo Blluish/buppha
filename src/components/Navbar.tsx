@@ -92,7 +92,11 @@ export default function Navbar() {
             {user ? (
               <div className="relative group">
                 <button className="text-[#6B5B4E] hover:text-[#8B6F5E] transition-colors">
-                  <User size={20} />
+                  {user.image ? (
+                    <img src={user.image} alt="" className="w-7 h-7 rounded-full object-cover border border-[#E8DDD5]" referrerPolicy="no-referrer" />
+                  ) : (
+                    <User size={20} />
+                  )}
                 </button>
                 <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-[#E8DDD5] opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
                   <div className="p-3 border-b border-[#E8DDD5]">

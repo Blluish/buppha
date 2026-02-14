@@ -11,7 +11,7 @@ export async function GET() {
 
     await initializeDb();
     const sql = getDb();
-    const rows = await sql`SELECT id, email, name, role, phone, address FROM users WHERE id = ${session.userId}`;
+    const rows = await sql`SELECT id, email, name, role, phone, address, image, provider FROM users WHERE id = ${session.userId}`;
 
     return NextResponse.json({ user: rows[0] || null });
   } catch {

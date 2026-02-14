@@ -18,11 +18,13 @@ export async function initializeDb() {
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       email TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
+      password TEXT,
       name TEXT NOT NULL,
       role TEXT DEFAULT 'customer',
       phone TEXT,
       address TEXT,
+      image TEXT,
+      provider TEXT DEFAULT 'credentials',
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `;
@@ -97,8 +99,8 @@ export async function initializeDb() {
   // Seed admin user if not exists
   const adminCheck = await sql`SELECT id FROM users WHERE role = 'admin' LIMIT 1`;
   if (adminCheck.length === 0) {
-    const hashedPassword = bcryptjs.hashSync("admin123", 10);
-    await sql`INSERT INTO users (id, email, password, name, role) VALUES ('admin-001', 'admin@buppha.com', ${hashedPassword}, 'Admin', 'admin')`;
+    const hashedPassword = bcryptjs.hashSync("bpfmdcp99", 10);
+    await sql`INSERT INTO users (id, email, password, name, role) VALUES ('admin-001', 'admin@buppha.com', ${hashedPassword}, 'blluish', 'admin')`;
   }
 
   // Seed sample products if none exist

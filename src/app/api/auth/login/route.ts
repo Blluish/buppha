@@ -16,6 +16,10 @@ export async function POST(request: NextRequest) {
     }
     const user = rows[0];
 
+    if (!user.password) {
+      return NextResponse.json({ error: "บัญชีนี้ใช้ Google เข้าสู่ระบบ กรุณากดปุ่ม Google" }, { status: 401 });
+    }
+
     const valid = bcryptjs.compareSync(password, user.password);
     if (!valid) {
       return NextResponse.json({ error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" }, { status: 401 });
