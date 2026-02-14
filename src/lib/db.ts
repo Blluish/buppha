@@ -96,11 +96,20 @@ export async function initializeDb() {
     )
   `;
 
-  // Seed admin user if not exists
+  // Add new columns if they don't exist (migration for existing databases)
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS image TEXT`;
+  await sql`ALTER TABLE users ADD COLUMN IF NOT EXISTS provider TEXT DEFAULT 'credentials'`;
+  await sql`ALTER TABLE users ALTER COLUMN password DROP NOT NULL`;
+
+  // Seed admin user if not exists, or update existing admin
   const adminCheck = await sql`SELECT id FROM users WHERE role = 'admin' LIMIT 1`;
   if (adminCheck.length === 0) {
     const hashedPassword = bcryptjs.hashSync("bpfmdcp99", 10);
     await sql`INSERT INTO users (id, email, password, name, role) VALUES ('admin-001', 'admin@buppha.com', ${hashedPassword}, 'blluish', 'admin')`;
+  } else {
+    // Update existing admin name and password
+    const hashedPassword = bcryptjs.hashSync("bpfmdcp99", 10);
+    await sql`UPDATE users SET name = 'blluish', password = ${hashedPassword} WHERE role = 'admin'`;
   }
 
   // Seed sample products if none exist

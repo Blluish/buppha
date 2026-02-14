@@ -86,14 +86,14 @@ function LoginContent() {
             <form onSubmit={handleSubmit}>
               <div className="space-y-4">
                 <div>
-                  <label className="block text-xs text-[#9B8B7E] mb-1.5">อีเมล</label>
+                  <label className="block text-xs text-[#9B8B7E] mb-1.5">อีเมลหรือชื่อผู้ใช้</label>
                   <input
-                    type="email"
+                    type="text"
                     value={form.email}
                     onChange={(e) => setForm({ ...form, email: e.target.value })}
                     required
                     className="w-full px-4 py-3 bg-[#FDF8F4] border border-[#E8DDD5] rounded-xl text-sm text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#C4A882]/30 focus:border-[#C4A882]"
-                    placeholder="your@email.com"
+                    placeholder="อีเมลหรือชื่อผู้ใช้"
                   />
                 </div>
                 <div>

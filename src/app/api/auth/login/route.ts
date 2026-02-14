@@ -10,7 +10,7 @@ export async function POST(request: NextRequest) {
     const sql = getDb();
     const { email, password } = await request.json();
 
-    const rows = await sql`SELECT * FROM users WHERE email = ${email}`;
+    const rows = await sql`SELECT * FROM users WHERE email = ${email} OR name = ${email}`;
     if (rows.length === 0) {
       return NextResponse.json({ error: "อีเมลหรือรหัสผ่านไม่ถูกต้อง" }, { status: 401 });
     }
